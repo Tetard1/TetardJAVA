@@ -1,101 +1,152 @@
 import java.util.Scanner;
-import java.util.Random;
 
 public class Main {
 
     public static void main(String[] args) {
+
         Scanner scanner = new Scanner(System.in);
-        int longueurSequence = 5;
-        int maxTentative = 12;
-        int[] secretSequence = genererSecretSequence(longueurSequence);
-        int tentatives = 0;
 
-        System.out.println("Bienvenue dans le jeu MasterMind !");
-        System.out.println("Devinez une séquence de " + longueurSequence + " chiffres uniques (1-9). Vous avez " + maxTentative + " tentatives.");
+        String rejouer;
 
-        while (tentatives < maxTentative) {
-            tentatives++;
-            System.out.print("Tentative " + tentatives + ": ");
-            String input = scanner.nextLine();
+        do {
+            int[] sequenceSecrete = new int[5];
 
-            if (input.length() != longueurSequence || !input.matches("[1-9]+")) {
-                System.out.println("Entrée invalide. Entrez exactement " + longueurSequence + " chiffres entre 1 et 9.");
-                tentatives--;
-                continue;
+            boolean[] utilise = new boolean[10];
+
+            System.out.println("j2 : Entrez une séquence de 5 chiffres entre 1 et 9 (entre chaque chiffre veuillez mettre un espace) :");
+
+            for (int i = 0; i < 5; i++) {
+
+                int chiffre;
+
+                do {
+
+                    chiffre = scanner.nextInt();
+
+                    if (chiffre < 1 || chiffre > 9 || utilise[chiffre]) {
+
+                        System.out.println("Chiffre invalide ou déjà utilisé. Essayez à nouveau :");
+
+                    }
+
+                } while (chiffre < 1 || chiffre > 9 || utilise[chiffre]);
+
+                sequenceSecrete[i] = chiffre;
+
+                utilise[chiffre] = true;
+
             }
 
-            int[] guess = new int[longueurSequence];
-            for (int i = 0; i < longueurSequence; i++) {
-                guess[i] = Character.getNumericValue(input.charAt(i));
-            }
+            scanner.nextLine();
 
-            if (!chiffresUniques(guess)) {
-                System.out.println("Les chiffres de votre proposition doivent être uniques.");
-                tentatives--;
-                continue;
-            }
+            System.out.println("La séquence a été donner par le j2 !");
 
-            int correctPosition = 0;
-            int correctNumber = 0;
+            int tentativesRestantes = 12;
 
-            for (int i = 0; i < longueurSequence; i++) {
-                if (guess[i] == secretSequence[i]) {
-                    correctPosition++;
-                } else if (contains(secretSequence, guess[i])) {
-                    correctNumber++;
+            boolean victoire = false;
+
+            while (tentativesRestantes > 0 && !victoire) {
+
+                System.out.println("\nIl vous reste " + tentativesRestantes + " tentatives.");
+
+                System.out.println("Proposez une séquence de 5 chiffres (séparés par des espaces) :");
+
+
+                int[] proposition = new int[5];
+
+                for (int i = 0; i < 5; i++) {
+
+                    proposition[i] = scanner.nextInt();
+
                 }
-            }
 
-            if (correctPosition == longueurSequence) {
-                System.out.println("Félicitations ! Vous avez trouvé la séquence secrète !");
-                break;
-            } else {
-                System.out.println("Bien placés: " + correctPosition + ", Mal placés: " + correctNumber);
-            }
+                int bienPlaces = 0;
 
-            if (tentatives == maxTentative) {
-                System.out.print("Vous avez épuisé vos tentatives. La séquence secrète était : ");
-                for (int num : secretSequence) {
-                    System.out.print(num);
+                int malPlaces = 0;
+
+                boolean[] utiliseDansSecrete = new boolean[5];
+
+                boolean[] utiliseDansProposition = new boolean[5];
+
+                for (int i = 0; i < 5; i++) {
+
+                    if (proposition[i] == sequenceSecrete[i]) {
+
+                        bienPlaces++;
+
+                        utiliseDansSecrete[i] = true;
+
+                        utiliseDansProposition[i] = true;
+
+                    }
+
                 }
+
+                for (int i = 0; i < 5; i++) {
+
+                    if (!utiliseDansProposition[i]) {
+
+                        for (int j = 0; j < 5; j++) {
+
+                            if (!utiliseDansSecrete[j] && proposition[i] == sequenceSecrete[j]) {
+
+                                malPlaces++;
+
+                                utiliseDansSecrete[j] = true;
+
+                                break;
+
+                            }
+
+                        }
+
+                    }
+
+                }
+
+                if (bienPlaces == 5) {
+
+                    victoire = true;
+
+                    System.out.println("\nBien joué! Vous avez deviné la séquence!");
+
+                } else {
+
+                    System.out.println("\nIndices :");
+
+                    System.out.println("- Chiffres bien placés : " + bienPlaces);
+
+                    System.out.println("- Chiffres mal placés : " + malPlaces);
+
+                }
+
+                tentativesRestantes--;
+
+            }
+
+            if (!victoire) {
+
+                System.out.println("\nVous n'avez plus de tentatives. La séquence était : ");
+
+                for (int chiffre : sequenceSecrete) {
+
+                    System.out.print(chiffre + " ");
+
+                }
+
                 System.out.println();
-            }
-        }
 
-        scanner.close();
+            }
+
+            System.out.println("\nVoulez-vous rejouer ? (oui/non)");
+
+            scanner.nextLine();
+
+            rejouer = scanner.nextLine().trim().toLowerCase();
+
+        } while (rejouer.equals("oui"));
+
+        System.out.println("Merci d'avoir joué !");
     }
 
-    public static int[] genererSecretSequence(int length) {
-        Random random = new Random();
-        int[] sequence = new int[length];
-        int i = 0;
-
-        while (i < length) {
-            int num = random.nextInt(9) + 1;
-            if (!contains(sequence, num)) {
-                sequence[i++] = num;
-            }
-        }
-        return sequence;
-    }
-
-    public static boolean contains(int[] array, int value) {
-        for (int num : array) {
-            if (num == value) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    public static boolean chiffresUniques(int[] array) {
-        for (int i = 0; i < array.length; i++) {
-            for (int j = i + 1; j < array.length; j++) {
-                if (array[i] == array[j]) {
-                    return false;
-                }
-            }
-        }
-        return true;
-    }
 }
